@@ -1,0 +1,18 @@
+# Secrets
+.env
+
+# Données téléchargées (re-générées par le pipeline)
+data/raw/*
+!data/raw/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Éditeurs / OS
+.vscode/
+.idea/
+.DS_Store

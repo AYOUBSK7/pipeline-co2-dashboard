@@ -1,0 +1,47 @@
+# Intégration continue : à chaque push, GitHub lance les tests unitaires
+# PUIS le pipeline complet sur une vraie base PostgreSQL éphémère.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests-et-pipeline:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: entrepot_co2
+          POSTGRES_USER: etl_user
+          POSTGRES_PASSWORD: etl_password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      - name: Tests unitaires
+        run: pytest -v
+
+      - name: Pipeline ETL de bout en bout
+        run: python -m etl.pipeline
+
+      - name: Vérifier le contenu de l'entrepôt
+        env:
+          PGPASSWORD: etl_password
+        run: |
+          psql -h localhost -U etl_user -d entrepot_co2 -c \
+            "SELECT statut, nb_pays, nb_faits_emis FROM meta.journal_chargement;"

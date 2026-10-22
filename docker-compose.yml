@@ -1,0 +1,21 @@
+# Lance un PostgreSQL 16 prêt à l'emploi, sans rien installer d'autre :
+#   docker compose up -d
+services:
+  postgres:
+    image: postgres:16
+    container_name: entrepot_co2
+    environment:
+      POSTGRES_DB: ${PG_DB:-entrepot_co2}
+      POSTGRES_USER: ${PG_USER:-etl_user}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-etl_password}
+    ports:
+      - "${PG_PORT:-5432}:5432"
+    volumes:
+      - donnees_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-etl_user} -d ${PG_DB:-entrepot_co2}"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  donnees_pg:
